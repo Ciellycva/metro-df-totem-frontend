@@ -1,73 +1,323 @@
-# Welcome to your Lovable project
 
-## Project info
+# 🚇 Metro DF Totem — Frontend Web
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Frontend do **MVP de Totem de Autoatendimento para Bilhete Digital do Metrô-DF**.
 
-## How can I edit this code?
+Esta aplicação é responsável por:
 
-There are several ways of editing your application.
+- interface do **totem de autoatendimento**
+- fluxo de compra do bilhete
+- geração e exibição do **QR Code Pix**
+- acompanhamento do pagamento
+- visualização do **bilhete eletrônico**
+- compartilhamento do bilhete no celular
 
-**Use Lovable**
+O frontend consome as APIs REST fornecidas pelo backend Flask.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+# 📌 Visão Geral da Arquitetura
 
-**Use your preferred IDE**
+A aplicação foi construída como **Single Page Application (SPA)**.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```text
+Frontend (React + Vite)
+        │
+        │ REST API
+        ▼
+Backend (Python + Flask)
+        │
+        ▼
+MySQL
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+O frontend roda em dois contextos:
 
-Follow these steps:
+1️⃣ **Totem físico (modo quiosque)**  
+2️⃣ **Página web do bilhete no celular do usuário**
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+---
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# ⚙️ Stack Tecnológica
 
-# Step 3: Install the necessary dependencies.
-npm i
+## Framework
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+- React 18
+- TypeScript
+
+## Build Tool
+
+- Vite
+
+## Estilização
+
+- Tailwind CSS
+- PostCSS
+
+## Componentes UI
+
+- shadcn/ui
+- Radix UI
+
+## Gerenciamento de Estado
+
+- React Hooks
+
+## Ferramentas de Qualidade
+
+- ESLint
+- Vitest
+
+---
+
+# 📦 Estrutura do Projeto
+
+```text
+frontend/
+│
+├── index.html
+├── package.json
+├── vite.config.ts
+├── tailwind.config.ts
+│
+├── public/
+│
+└── src/
+    │
+    ├── main.tsx
+    ├── App.tsx
+    │
+    ├── pages/
+    │
+    │   ├── kiosk/
+    │   │   ├── KioskIdle.tsx
+    │   │   ├── KioskHome.tsx
+    │   │   ├── KioskProduct.tsx
+    │   │   ├── KioskPix.tsx
+    │   │   ├── KioskPixProcessing.tsx
+    │   │   ├── KioskPixExpired.tsx
+    │   │   ├── KioskPaymentSuccess.tsx
+    │   │   ├── KioskPaymentFailure.tsx
+    │   │   ├── KioskOperationalContingency.tsx
+    │   │   └── KioskSessionEnd.tsx
+    │
+    │   ├── ticket/
+    │   │   ├── TicketView.tsx
+    │   │   ├── TicketShare.tsx
+    │   │   └── TicketError.tsx
+    │
+    ├── components/
+    ├── hooks/
+    ├── lib/
+```
+
+---
+
+# 🧭 Rotas da Aplicação
+
+## Fluxo do Totem
+
+| Rota | Tela |
+|-----|-----|
+| `/` | Página inicial |
+| `/kiosk/idle` | Tela de espera |
+| `/kiosk/home` | Tela inicial de compra |
+| `/kiosk/product` | Seleção de produto |
+| `/kiosk/pix` | Exibição do QR Code Pix |
+| `/kiosk/pix-processing` | Aguardando pagamento |
+| `/kiosk/pix-expired` | Pix expirado |
+| `/kiosk/payment-success` | Pagamento confirmado |
+| `/kiosk/payment-failure` | Falha no pagamento |
+| `/kiosk/session-end` | Encerramento da sessão |
+| `/kiosk/contingency` | Operação em contingência |
+
+---
+
+## Fluxo do Bilhete
+
+| Rota | Tela |
+|-----|-----|
+| `/ticket/:id` | Visualização do bilhete |
+| `/ticket/share/:id` | Compartilhamento |
+| `/ticket/error` | Erro de consulta |
+
+---
+
+# 🔄 Diagrama de Fluxo das Telas do Totem
+
+```mermaid
+flowchart TD
+
+A[Idle Screen] --> B[Home]
+B --> C[Selecionar Produto]
+C --> D[Gerar Pix]
+
+D --> E[Aguardando Pagamento]
+
+E -->|Pagamento confirmado| F[Sucesso]
+E -->|Pix expirado| G[Pix Expirado]
+E -->|Erro| H[Falha Pagamento]
+
+F --> I[Encerrar Sessão]
+G --> C
+H --> B
+```
+
+---
+
+# 🔗 Diagrama de Integração Frontend ↔ Backend
+
+```mermaid
+sequenceDiagram
+
+participant User
+participant Frontend
+participant Backend
+participant Database
+
+User->>Frontend: Interage com o Totem
+Frontend->>Backend: POST /sessions
+Backend->>Database: Criar sessão
+Database-->>Backend: OK
+Backend-->>Frontend: Sessão criada
+
+Frontend->>Backend: POST /orders
+Backend->>Database: Criar pedido
+Backend-->>Frontend: Pedido criado
+
+Frontend->>Backend: POST /payments/pix
+Backend->>Database: Registrar pagamento
+Backend-->>Frontend: QR Code Pix
+
+Frontend->>Backend: GET /payments/status
+Backend->>Database: Consultar pagamento
+Backend-->>Frontend: Pago
+
+Frontend->>Backend: GET /tickets
+Backend->>Database: Recuperar bilhete
+Backend-->>Frontend: QR Code Bilhete
+```
+
+---
+
+# 🔌 APIs Consumidas pelo Frontend
+
+| Método | Endpoint | Função |
+|------|------|------|
+| POST | `/kiosk/sessions` | Criar sessão |
+| POST | `/orders` | Criar pedido |
+| POST | `/payments/pix` | Gerar pagamento Pix |
+| GET | `/payments/{id}/status` | Consultar pagamento |
+| GET | `/tickets/{id}` | Consultar bilhete |
+| POST | `/validations` | Validar bilhete |
+| GET | `/health` | Verificar API |
+
+Base URL padrão:
+
+```
+http://localhost:5000/api/v1
+```
+
+Exemplo de chamada:
+
+```ts
+fetch(`${API_URL}/orders`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify(data)
+})
+```
+
+---
+
+# 🖥️ Instalação do Ambiente
+
+## Pré-requisitos
+
+- Node.js 18+
+- npm ou bun
+
+---
+
+# Instalação com npm
+
+```
+cd frontend
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Aplicação disponível em:
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```
+http://localhost:5173
+```
 
-**Use GitHub Codespaces**
+---
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Instalação com Bun
 
-## What technologies are used for this project?
+```
+bun install
+bun run dev
+```
 
-This project is built with:
+---
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+# Build para Produção
 
-## How can I deploy this project?
+```
+npm run build
+npm run preview
+```
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+---
 
-## Can I connect a custom domain to my Lovable project?
+# 🌐 Configuração de Ambiente
 
-Yes, you can!
+Crie arquivo `.env`
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+```
+VITE_API_URL=http://localhost:5000/api/v1
+```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Uso no código:
+
+```ts
+const API_URL = import.meta.env.VITE_API_URL
+```
+
+---
+
+# 🧪 Executando Testes
+
+```
+npm run test
+```
+
+---
+
+# 🎯 Funcionalidades Implementadas
+
+✔ Fluxo completo do totem  
+✔ Geração de pagamento Pix  
+✔ Monitoramento do pagamento  
+✔ Exibição do QR Code  
+✔ Visualização do bilhete  
+✔ Compartilhamento do bilhete  
+
+---
+
+# 🚧 Status do Projeto
+
+```
+MVP em desenvolvimento
+```
+
+---
+
+# 👨‍💻 Autor
+
+Projeto acadêmico — **Totem de Autoatendimento para Bilhete Digital do Metrô-DF**
