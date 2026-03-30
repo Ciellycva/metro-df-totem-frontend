@@ -24,7 +24,7 @@ export default function KioskHome() {
             Compra de bilhete digital
           </h1>
           <p className="text-base lg:text-lg text-muted-foreground mt-3">
-            Compre seu bilhete e acesse no celular após o pagamento
+            Compre seu bilhete e acesse no celular após o pagamento!
           </p>
         </div>
 
