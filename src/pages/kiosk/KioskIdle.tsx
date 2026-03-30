@@ -5,10 +5,40 @@ import { Smartphone, Zap } from "lucide-react";
 export default function KioskIdle() {
   const navigate = useNavigate();
 
+    const API_URL = import.meta.env.VITE_API_URL;
+
+  const handleStart = async () => {
+    console.log("Clicou");
+    console.log("API URL:", API_URL);
+
+    try {
+      const response = await fetch(`${API_URL}/kiosk/sessions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          id_totem: 1
+        })
+      });
+
+      const data = await response.json();
+
+      console.log("Sessão criada:", data);
+
+      localStorage.setItem("sessaoId", data.id_sessao);
+
+      navigate("/kiosk/home");
+
+    } catch (error) {
+      console.error("Erro ao iniciar sessão:", error);
+    }
+  };
+
   return (
     <div
       className="kiosk-container metro-gradient cursor-pointer select-none"
-      onClick={() => navigate("/kiosk/home")}
+      onClick={handleStart}
     >
       <div className="flex-1 flex flex-col items-center justify-center px-8 gap-8">
         <motion.div
@@ -43,7 +73,7 @@ export default function KioskIdle() {
             className="bg-primary-foreground/20 backdrop-blur-sm rounded-2xl px-12 py-8 lg:px-16 lg:py-10 border border-primary-foreground/30"
           >
             <p className="text-primary-foreground font-display font-bold text-2xl lg:text-4xl text-center">
-              Toque aqui para iniciar
+              Toque aqui para começar
             </p>
           </motion.div>
 
