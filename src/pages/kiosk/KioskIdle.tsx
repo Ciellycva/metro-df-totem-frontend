@@ -26,7 +26,13 @@ export default function KioskIdle() {
 
       console.log("Sessão criada:", data);
 
-      localStorage.setItem("sessaoId", data.id_sessao);
+      if(!response.ok || data.success === false){
+        throw new Error(data.message || "Erro ao iniciar sessão");
+      }
+      
+      const id_Sessao = data.id_sessao ?? data.data?.id_sessao;
+
+      localStorage.setItem("sessaoId", String(id_Sessao));
 
       navigate("/kiosk/home");
 

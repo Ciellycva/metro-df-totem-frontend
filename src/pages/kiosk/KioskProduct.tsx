@@ -7,6 +7,42 @@ import { QrCode, ArrowLeft } from "lucide-react";
 
 export default function KioskProduct() {
   const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL;
+
+  const handleCreateOrder = async () => {
+    try {
+      const sessaoId = localStorage.getItem("sessaoId");
+      console.log("sessaoId salvo:", sessaoId);
+
+      const response = await fetch(`${API_URL}/orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          id_sessao: Number(sessaoId),
+          valor_total: 5.5
+        })
+      });
+
+      const data = await response.json();
+
+      console.log("Pedido criado:", data);
+
+      if (!response.ok || data.success === false) {
+        throw new Error(data.message || "Erro ao criar pedido");
+      }
+
+      localStorage.setItem(
+        "pedidoId",
+        String(data.id_pedido ?? data.data?.id_pedido)
+      );
+
+      navigate("/kiosk/pix");
+    } catch (error) {
+      console.error("Erro ao criar pedido:", error);
+    }
+  };
 
   return (
     <KioskShell>
@@ -29,6 +65,7 @@ export default function KioskProduct() {
               </p>
             </div>
           </div>
+
           <div className="border-t-2 border-border pt-4">
             <div className="flex items-baseline justify-between">
               <span className="text-base lg:text-lg text-muted-foreground">Valor</span>
@@ -40,10 +77,14 @@ export default function KioskProduct() {
         </div>
 
         <div className="w-full flex flex-col gap-4">
-          <PrimaryButton onClick={() => navigate("/kiosk/pix")}>
+          <PrimaryButton onClick={handleCreateOrder}>
             Pagar com Pix
           </PrimaryButton>
-          <SecondaryButton onClick={() => navigate("/kiosk/home")} icon={<ArrowLeft className="w-5 h-5" />}>
+
+          <SecondaryButton
+            onClick={() => navigate("/kiosk/home")}
+            icon={<ArrowLeft className="w-5 h-5" />}
+          >
             Voltar
           </SecondaryButton>
         </div>
