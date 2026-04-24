@@ -48,8 +48,14 @@ export default function KioskPix() {
           throw new Error(data.message || "Erro ao gerar pagamento Pix");
         }
 
-        setQrCode(data.data?.codigo_pix);
-        setPaymentId(data.data?.id_pagamento);
+        const pagamento = data.data ?? data;
+
+        console.log("Pagamento normalizado:", pagamento);
+        console.log("paymentId salvo:", pagamento.id_pagamento);
+
+        localStorage.setItem("paymentId", String(pagamento.id_pagamento));
+        setPaymentId(Number(pagamento.id_pagamento));
+        setQrCode(pagamento.codigo_pix || "");
       } catch (error) {
         console.error("Erro ao gerar Pix:", error);
       } finally {
@@ -62,12 +68,14 @@ export default function KioskPix() {
 
   const simularPagamento = async () => {
     try {
-      if (!paymentId) {
+      const idPagamento = paymentId ?? Number(localStorage.getItem("paymentId"));
+
+      if (!idPagamento) {
         throw new Error("Pagamento não encontrado");
       }
 
       const response = await fetch(
-        `${API_URL}/payments/${paymentId}/simulate-status`,
+        `${API_URL}/payments/${idPagamento}/simulate-status`,
         {
           method: "POST",
           headers: {

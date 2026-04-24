@@ -8,16 +8,25 @@ import { RefreshCw } from "lucide-react";
 export default function KioskPixExpired() {
   const navigate = useNavigate();
 
+  const handleGenerateNewPix = () => {
+    localStorage.removeItem("paymentId");
+    navigate("/kiosk/pix");
+  };
+
   return (
     <KioskShell>
       <ResultState
         variant="timeout"
         title="O tempo para pagamento expirou"
-        description="Gere um novo QR Code para continuar"
+        description="Por segurança, o tempo de pagamento foi encerrado. Gere um novo QR Code Pix para continuar."
       >
-        <PrimaryButton onClick={() => navigate("/kiosk/pix")} icon={<RefreshCw className="w-5 h-5" />}>
+        <PrimaryButton
+          onClick={handleGenerateNewPix}
+          icon={<RefreshCw className="w-5 h-5" />}
+        >
           Gerar novo QR Code Pix
         </PrimaryButton>
+
         <SecondaryButton onClick={() => navigate("/kiosk/session-end")}>
           Cancelar
         </SecondaryButton>
