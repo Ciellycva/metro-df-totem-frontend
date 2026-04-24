@@ -10,10 +10,10 @@ export default function KioskPaymentFailure() {
 
   return (
     <KioskShell>
-      
+
       <ResultState
         variant="error"
-        title="Ocorreu uma falha no seu pagamento" // Mais direto
+        title="Ocorreu uma falha no seu pagamento" 
         description="Não recebemos a confirmação. Verifique seu app do banco ou tente realizar a compra novamente."
       >
         <PrimaryButton onClick={() => navigate("/kiosk/product")} icon={<RefreshCw className="w-5 h-5" />}>
