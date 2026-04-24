@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { KioskShell } from "@/components/metro/KioskShell";
 import { SecondaryButton } from "@/components/metro/SecondaryButton";
 import { QRCodeCard } from "@/components/metro/QRCodeCard";
@@ -11,10 +11,78 @@ import { X } from "lucide-react";
 
 export default function KioskPix() {
   const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL;
+
+  const [qrCodeValue, setQrCodeValue] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const handleExpire = useCallback(() => {
     navigate("/kiosk/pix-expired");
   }, [navigate]);
+
+  useEffect(() => {
+    const createPixPayment = async () => {
+      try {
+        const pedidoId = localStorage.getItem("pedidoId");
+        console.log("pedidoId salvo:", pedidoId);
+
+        const response = await fetch(`${API_URL}/payments/pix`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id_pedido: Number(pedidoId),
+          }),
+        });
+
+        const data = await response.json();
+
+        console.log("Pagamento Pix criado:", data);
+
+        if (!response.ok || data.success === false) {
+          throw new Error(data.message || "Erro ao gerar pagamento Pix");
+        }
+
+        const pagamento = data.data ?? data;
+
+        localStorage.setItem("paymentId", String(pagamento.id_pagamento));
+        setQrCodeValue(pagamento.codigo_pix || "");
+      } catch (error) {
+        console.error("Erro ao gerar Pix:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    createPixPayment();
+  }, [API_URL]);
+
+  const handleSimulatePayment = async () => {
+    try {
+      const paymentId = localStorage.getItem("paymentId");
+
+      if (!paymentId) {
+        console.error("paymentId não encontrado");
+        return;
+      }
+
+      await fetch(`${API_URL}/payments/${paymentId}/simulate-status`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          situacao_pagamento: "PAGO"
+        })
+      });
+
+      navigate("/kiosk/pix-processing");
+
+    } catch (error) {
+      console.error("Erro ao simular pagamento:", error);
+    }
+  };
 
   return (
     <KioskShell>
@@ -29,22 +97,32 @@ export default function KioskPix() {
           description="Abra o app do banco e pague pelo QR Code"
         />
 
-        <QRCodeCard
-          value="00020126580014br.gov.bcb.pix0136metro-df-bilhete-unitario-pix-demo5204000053039865802BR5925METRO-DF6008BRASILIA62070503***6304ABCD"
-          size={280}
-        />
+        {loading ? (
+          <p>Gerando QR Code Pix...</p>
+        ) : (
+          <QRCodeCard value={qrCodeValue} size={280} />
+        )}
 
         <CountdownTimer
-          seconds={300}
+          seconds={60}
           onExpire={handleExpire}
           label="Tempo restante:"
         />
 
         <div className="w-full flex flex-col gap-3 mt-2">
-          <PrimaryButton onClick={() => navigate("/kiosk/pix-processing")}>
+          <PrimaryButton onClick={handleSimulatePayment}>
             Simular pagamento
           </PrimaryButton>
-          <SecondaryButton onClick={() => navigate("/kiosk/product")} icon={<X className="w-5 h-5" />}>
+
+          <SecondaryButton
+            onClick={() => {
+              localStorage.removeItem("pedidoId");
+              localStorage.removeItem("paymentId");
+              localStorage.removeItem("sessaoId");
+              navigate("/kiosk/idle");
+            }}
+            icon={<X className="w-5 h-5" />}
+          >
             Cancelar compra
           </SecondaryButton>
         </div>
