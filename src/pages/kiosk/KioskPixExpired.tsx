@@ -15,11 +15,14 @@ export default function KioskPixExpired() {
 
   return (
     <KioskShell>
+      
       <ResultState
         variant="timeout"
-        title="O tempo para pagamento expirou"
-        description="Por segurança, o tempo de pagamento foi encerrado. Gere um novo QR Code Pix para continuar."
+        title="QR Code Pix expirado"
+        description="O tempo limite de 5 minutos foi atingido. Fique tranquilo: se você não pagou, nenhuma cobrança foi feita."
       >
+        {/* O resto do código continua igual */}
+
         <PrimaryButton
           onClick={handleGenerateNewPix}
           icon={<RefreshCw className="w-5 h-5" />}

@@ -9,41 +9,41 @@ import { AlertCircle, Loader2 } from "lucide-react";
 export default function TicketView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
+
   // Estados para gerenciar a integração com o Backend
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [ticketData, setTicketData] = useState<any>(null);
 
   useEffect(() => {
-  const fetchTicket = async () => {
-    // Só dispara se o ID existir na URL
-    if (!id) return;
+    const fetchTicket = async () => {
+      // Só dispara se o ID existir na URL
+      if (!id) return;
 
-    try {
-      setLoading(true);
-      // Confirme se o VITE_API_URL no .env termina em /api/v1
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/tickets/${id}`);
-      
-      if (!response.ok) {
-        throw new Error(`Erro: ${response.status}`);
+      try {
+        setLoading(true);
+        // Confirme se o VITE_API_URL no .env termina em /api/v1
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/tickets/${id}`);
+
+        if (!response.ok) {
+          throw new Error(`Erro: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        // Ajuste conforme a estrutura do seu backend (pode ser result.data ou result direto)
+        setTicketData(result.data || result);
+        setError(false);
+      } catch (err) {
+        console.error("Erro na integração:", err);
+        setError(true);
+      } finally {
+        setLoading(false);
       }
-      
-      const result = await response.json();
-      
-      // Ajuste conforme a estrutura do seu backend (pode ser result.data ou result direto)
-      setTicketData(result.data || result);
-      setError(false);
-    } catch (err) {
-      console.error("Erro na integração:", err);
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  fetchTicket();
-}, [id]); // Executa sempre que o ID mudar
+    fetchTicket();
+  }, [id]); // Executa sempre que o ID mudar
 
   const handleDownload = () => {
     // Lógica de simulação de download que você já tinha
@@ -78,7 +78,7 @@ export default function TicketView() {
           <p className="text-muted-foreground mt-2 mb-8">
             Não foi possível localizar este bilhete eletrônico.
           </p>
-          <button 
+          <button
             onClick={() => navigate('/')}
             className="text-primary font-bold underline"
           >
@@ -108,7 +108,7 @@ export default function TicketView() {
 
         {/* QRCodeCard usando o ID ou payload retornado do backend */}
         <QRCodeCard
-          value={ticketData?.codigo_qr || `metro-df-ticket-${id}`}
+          value={ticketData?.data?.payload_qr || `METRO-DF-ID-${id}`}
           size={240}
         />
 

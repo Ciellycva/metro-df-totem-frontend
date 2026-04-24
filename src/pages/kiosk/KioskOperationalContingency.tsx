@@ -9,10 +9,12 @@ export default function KioskOperationalContingency() {
   return (
     <KioskShell>
       <div className="flex flex-col items-center gap-8 w-full max-w-lg">
+        
         <ContingencyMessage
-          message="Não foi possível concluir este processo neste momento"
-          guidance="Utilize o guichê de atendimento, cartão recarga ou compra direta no acesso"
+          message="Sistema temporariamente indisponível"
+          guidance="Para sua segurança, as vendas neste totem estão suspensas. Por favor, dirija-se à bilheteria ou utilize uma máquina ao lado."
         />
+
         <PrimaryButton onClick={() => navigate("/kiosk/session-end")}>
           Encerrar
         </PrimaryButton>

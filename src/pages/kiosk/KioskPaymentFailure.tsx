@@ -10,18 +10,20 @@ export default function KioskPaymentFailure() {
 
   return (
     <KioskShell>
+      
       <ResultState
         variant="error"
-        title="Não foi possível confirmar o pagamento"
-        description="Tente novamente ou utilize outro canal de atendimento"
+        title="Ocorreu uma falha no seu pagamento" // Mais direto
+        description="Não recebemos a confirmação. Verifique seu app do banco ou tente realizar a compra novamente."
       >
-        <PrimaryButton onClick={() => navigate("/kiosk/pix")} icon={<RefreshCw className="w-5 h-5" />}>
-          Tentar novamente
+        <PrimaryButton onClick={() => navigate("/kiosk/product")} icon={<RefreshCw className="w-5 h-5" />}>
+          Escolher produto novamente
         </PrimaryButton>
         <SecondaryButton onClick={() => navigate("/kiosk/session-end")}>
-          Encerrar
+          Cancelar e sair
         </SecondaryButton>
       </ResultState>
+
     </KioskShell>
   );
 }
