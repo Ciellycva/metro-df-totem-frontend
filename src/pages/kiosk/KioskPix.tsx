@@ -13,8 +13,7 @@ export default function KioskPix() {
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL;
 
-  const [qrCode, setQrCode] = useState("");
-  const [paymentId, setPaymentId] = useState<number | null>(null);
+  const [qrCodeValue, setQrCodeValue] = useState("");
   const [loading, setLoading] = useState(true);
 
   const handleExpire = useCallback(() => {
@@ -22,13 +21,10 @@ export default function KioskPix() {
   }, [navigate]);
 
   useEffect(() => {
-    const gerarPix = async () => {
+    const createPixPayment = async () => {
       try {
         const pedidoId = localStorage.getItem("pedidoId");
-
-        if (!pedidoId) {
-          throw new Error("Pedido não encontrado");
-        }
+        console.log("pedidoId salvo:", pedidoId);
 
         const response = await fetch(`${API_URL}/payments/pix`, {
           method: "POST",
@@ -42,7 +38,7 @@ export default function KioskPix() {
 
         const data = await response.json();
 
-        console.log("Pagamento PIX:", data);
+        console.log("Pagamento Pix criado:", data);
 
         if (!response.ok || data.success === false) {
           throw new Error(data.message || "Erro ao gerar pagamento Pix");
@@ -50,12 +46,8 @@ export default function KioskPix() {
 
         const pagamento = data.data ?? data;
 
-        console.log("Pagamento normalizado:", pagamento);
-        console.log("paymentId salvo:", pagamento.id_pagamento);
-
         localStorage.setItem("paymentId", String(pagamento.id_pagamento));
-        setPaymentId(Number(pagamento.id_pagamento));
-        setQrCode(pagamento.codigo_pix || "");
+        setQrCodeValue(pagamento.codigo_pix || "");
       } catch (error) {
         console.error("Erro ao gerar Pix:", error);
       } finally {
@@ -63,39 +55,30 @@ export default function KioskPix() {
       }
     };
 
-    gerarPix();
+    createPixPayment();
   }, [API_URL]);
 
-  const simularPagamento = async () => {
+  const handleSimulatePayment = async () => {
     try {
-      const idPagamento = paymentId ?? Number(localStorage.getItem("paymentId"));
+      const paymentId = localStorage.getItem("paymentId");
 
-      if (!idPagamento) {
-        throw new Error("Pagamento não encontrado");
+      if (!paymentId) {
+        console.error("paymentId não encontrado");
+        return;
       }
 
-      const response = await fetch(
-        `${API_URL}/payments/${idPagamento}/simulate-status`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            situacao_pagamento: "PAGO",
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      console.log("Pagamento simulado:", data);
-
-      if (!response.ok || data.success === false) {
-        throw new Error(data.message || "Erro ao simular pagamento");
-      }
+      await fetch(`${API_URL}/payments/${paymentId}/simulate-status`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          situacao_pagamento: "PAGO"
+        })
+      });
 
       navigate("/kiosk/pix-processing");
+
     } catch (error) {
       console.error("Erro ao simular pagamento:", error);
     }
@@ -115,24 +98,29 @@ export default function KioskPix() {
         />
 
         {loading ? (
-          <p className="text-muted-foreground">Gerando QR Code...</p>
+          <p>Gerando QR Code Pix...</p>
         ) : (
-          <QRCodeCard value={qrCode} size={280} />
+          <QRCodeCard value={qrCodeValue} size={280} />
         )}
 
         <CountdownTimer
-          seconds={300}
+          seconds={60}
           onExpire={handleExpire}
           label="Tempo restante:"
         />
 
         <div className="w-full flex flex-col gap-3 mt-2">
-          <PrimaryButton onClick={simularPagamento}>
+          <PrimaryButton onClick={handleSimulatePayment}>
             Simular pagamento
           </PrimaryButton>
 
           <SecondaryButton
-            onClick={() => navigate("/kiosk/product")}
+            onClick={() => {
+              localStorage.removeItem("pedidoId");
+              localStorage.removeItem("paymentId");
+              localStorage.removeItem("sessaoId");
+              navigate("/kiosk/idle");
+            }}
             icon={<X className="w-5 h-5" />}
           >
             Cancelar compra
