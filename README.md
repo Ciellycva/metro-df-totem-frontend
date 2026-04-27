@@ -1,3 +1,4 @@
+Nome dos Integrantes: Amanda Monteiro, Cielly Alves, Jhonathan Gabriel, Lucas Oliveira.
 
 # 🚇 Metro DF Totem — Frontend Web
 
